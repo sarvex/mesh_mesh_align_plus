@@ -66,16 +66,12 @@ class MAPLUS_OT_AddListItemBase(bpy.types.Operator):
                 base_name += num_format.format('1')
                 num_postfix_group += 1
 
-            if not (base_name in name_list):
+            if base_name not in name_list:
                 cur_item_name = base_name
                 keep_naming = False
-                continue
-            elif cur_item_name in name_list:
-                continue
-            else:
+            elif cur_item_name not in name_list:
                 keep_naming = False
-                continue
-
+            continue
         new_item = addon_data.prim_list.add()
         new_item.name = cur_item_name
         new_item.kind = self.new_kind
@@ -239,9 +235,7 @@ class MAPLUS_OT_ChangeTypeToPointPrim(MAPLUS_OT_ChangeTypeBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.kind == cls.target_type:
-            return False
-        return True
+        return active_item.kind != cls.target_type
 
 
 class MAPLUS_OT_ChangeTypeToLinePrim(MAPLUS_OT_ChangeTypeBaseClass):
@@ -257,9 +251,7 @@ class MAPLUS_OT_ChangeTypeToLinePrim(MAPLUS_OT_ChangeTypeBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.kind == cls.target_type:
-            return False
-        return True
+        return active_item.kind != cls.target_type
 
 
 class MAPLUS_OT_ChangeTypeToPlanePrim(MAPLUS_OT_ChangeTypeBaseClass):
@@ -275,9 +267,7 @@ class MAPLUS_OT_ChangeTypeToPlanePrim(MAPLUS_OT_ChangeTypeBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.kind == cls.target_type:
-            return False
-        return True
+        return active_item.kind != cls.target_type
 
 
 class MAPLUS_OT_ChangeTypeToCalcPrim(MAPLUS_OT_ChangeTypeBaseClass):
@@ -293,9 +283,7 @@ class MAPLUS_OT_ChangeTypeToCalcPrim(MAPLUS_OT_ChangeTypeBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.kind == cls.target_type:
-            return False
-        return True
+        return active_item.kind != cls.target_type
 
 
 class MAPLUS_OT_ChangeTypeToTransfPrim(MAPLUS_OT_ChangeTypeBaseClass):
@@ -311,9 +299,7 @@ class MAPLUS_OT_ChangeTypeToTransfPrim(MAPLUS_OT_ChangeTypeBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.kind == cls.target_type:
-            return False
-        return True
+        return active_item.kind != cls.target_type
 
 
 
@@ -347,9 +333,7 @@ class MAPLUS_OT_ChangeCalcToSingle(MAPLUS_OT_ChangeCalcBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.calc_type == cls.target_calc:
-            return False
-        return True
+        return active_item.calc_type != cls.target_calc
 
 
 class MAPLUS_OT_ChangeCalcToMulti(MAPLUS_OT_ChangeCalcBaseClass):
@@ -365,9 +349,7 @@ class MAPLUS_OT_ChangeCalcToMulti(MAPLUS_OT_ChangeCalcBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.calc_type == cls.target_calc:
-            return False
-        return True
+        return active_item.calc_type != cls.target_calc
 
 
 # Basic transformation type selector functionality (a primitive sub-type),
@@ -402,9 +384,7 @@ class MAPLUS_OT_ChangeTransfToAlignPoints(MAPLUS_OT_ChangeTransfBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.transf_type == cls.target_transf:
-            return False
-        return True
+        return active_item.transf_type != cls.target_transf
 
 
 class MAPLUS_OT_ChangeTransfToDirectionalSlide(MAPLUS_OT_ChangeTransfBaseClass):
@@ -420,9 +400,7 @@ class MAPLUS_OT_ChangeTransfToDirectionalSlide(MAPLUS_OT_ChangeTransfBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.transf_type == cls.target_transf:
-            return False
-        return True
+        return active_item.transf_type != cls.target_transf
 
 
 class MAPLUS_OT_ChangeTransfToScaleMatchEdge(MAPLUS_OT_ChangeTransfBaseClass):
@@ -438,9 +416,7 @@ class MAPLUS_OT_ChangeTransfToScaleMatchEdge(MAPLUS_OT_ChangeTransfBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.transf_type == cls.target_transf:
-            return False
-        return True
+        return active_item.transf_type != cls.target_transf
 
 
 class MAPLUS_OT_ChangeTransfToAxisRotate(MAPLUS_OT_ChangeTransfBaseClass):
@@ -456,9 +432,7 @@ class MAPLUS_OT_ChangeTransfToAxisRotate(MAPLUS_OT_ChangeTransfBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.transf_type == cls.target_transf:
-            return False
-        return True
+        return active_item.transf_type != cls.target_transf
 
 
 class MAPLUS_OT_ChangeTransfToAlignLines(MAPLUS_OT_ChangeTransfBaseClass):
@@ -474,9 +448,7 @@ class MAPLUS_OT_ChangeTransfToAlignLines(MAPLUS_OT_ChangeTransfBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.transf_type == cls.target_transf:
-            return False
-        return True
+        return active_item.transf_type != cls.target_transf
 
 
 class MAPLUS_OT_ChangeTransfToAlignPlanes(MAPLUS_OT_ChangeTransfBaseClass):
@@ -492,9 +464,7 @@ class MAPLUS_OT_ChangeTransfToAlignPlanes(MAPLUS_OT_ChangeTransfBaseClass):
         prims = bpy.context.scene.maplus_data.prim_list
         active_item = prims[addon_data.active_list_item]
 
-        if active_item.transf_type == cls.target_transf:
-            return False
-        return True
+        return active_item.transf_type != cls.target_transf
 
 
 class MAPLUS_OT_SpecialsAddFromActiveBase(bpy.types.Operator):
@@ -1050,13 +1020,7 @@ class MAPLUS_PT_MAPlusGui(bpy.types.Panel):
                     # to access that index in prims at the beginning here.
                     if active_item.single_calc_target < len(prims):
                         calc_target = prims[active_item.single_calc_target]
-                        if calc_target.kind == 'POINT':
-                            item_info_col.operator(
-                                "maplus.composenewlinefrompoint",
-                                icon='LIGHT_SUN',
-                                text="New Line from Point"
-                            )
-                        elif calc_target.kind == 'LINE':
+                        if calc_target.kind == 'LINE':
                             item_info_col.operator(
                                 "maplus.calclinelength",
                                 text="Line Length"
@@ -1071,6 +1035,12 @@ class MAPLUS_PT_MAPlusGui(bpy.types.Panel):
                                 "maplus.composenormalfromplane",
                                 icon='LIGHT_SUN',
                                 text="Get Plane Normal (Normalized)"
+                            )
+                        elif calc_target.kind == 'POINT':
+                            item_info_col.operator(
+                                "maplus.composenewlinefrompoint",
+                                icon='LIGHT_SUN',
+                                text="New Line from Point"
                             )
                 elif active_item.calc_type == 'MULTIITEM':
 
@@ -1337,8 +1307,10 @@ class MAPLUS_PT_MAPlusGui(bpy.types.Panel):
 
                     active_transf = bpy.types.AnyType(active_item)
 
-                    if (active_item.transf_type != 'SCALEMATCHEDGE' and
-                            active_item.transf_type != 'AXISROTATE'):
+                    if active_item.transf_type not in [
+                        'SCALEMATCHEDGE',
+                        'AXISROTATE',
+                    ]:
                         item_info_col.label(text='Transformation Modifiers:')
                         item_mods_box = item_info_col.box()
                         mods_row_1 = item_mods_box.row()

@@ -42,207 +42,197 @@ def scale_mat_from_vec(vec):
 def return_selected_verts(mesh_object,
                           verts_to_grab,
                           global_matrix_multiplier=None):
-    if type(mesh_object.data) == bpy.types.Mesh:
-
-        # Todo, check for a better way to handle/if this is needed
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.object.editmode_toggle()
-
-        # Init source mesh
-        src_mesh = bmesh.new()
-        src_mesh.from_mesh(mesh_object.data)
-        src_mesh.select_history.validate()
-
-        history_indices = []
-        history_as_verts = []
-        for element in src_mesh.select_history:
-            if len(history_as_verts) == verts_to_grab:
-                break
-            if type(element) == bmesh.types.BMVert:
-                if not (element.index in history_indices):
-                    history_as_verts.append(element)
-            else:
-                for item in element.verts:
-                    if len(history_as_verts) == verts_to_grab:
-                        break
-                    if not (item.index in history_indices):
-                        history_as_verts.append(item)
-
-        selection = []
-        vert_indices = []
-        for vert in history_as_verts:
-            if len(selection) == verts_to_grab:
-                break
-            coords = vert.co
-            if global_matrix_multiplier:
-                coords = global_matrix_multiplier @ coords
-            if not (vert.index in vert_indices):
-                vert_indices.append(vert.index)
-                selection.append(coords)
-
-        for vert in (v for v in src_mesh.verts if v.select):
-            if len(selection) == verts_to_grab:
-                break
-            coords = vert.co
-            if global_matrix_multiplier:
-                coords = global_matrix_multiplier @ coords
-            if not (vert.index in vert_indices):
-                vert_indices.append(vert.index)
-                selection.append(coords)
-
-        if len(selection) == verts_to_grab:
-            return selection
-        else:
-            raise maplus_except.InsufficientSelectionError()
-    else:
+    if type(mesh_object.data) != bpy.types.Mesh:
         raise maplus_except.NonMeshGrabError(mesh_object)
+    # Todo, check for a better way to handle/if this is needed
+    bpy.ops.object.editmode_toggle()
+    bpy.ops.object.editmode_toggle()
+
+    # Init source mesh
+    src_mesh = bmesh.new()
+    src_mesh.from_mesh(mesh_object.data)
+    src_mesh.select_history.validate()
+
+    history_indices = []
+    history_as_verts = []
+    for element in src_mesh.select_history:
+        if len(history_as_verts) == verts_to_grab:
+            break
+        if type(element) == bmesh.types.BMVert:
+            if element.index not in history_indices:
+                history_as_verts.append(element)
+        else:
+            for item in element.verts:
+                if len(history_as_verts) == verts_to_grab:
+                    break
+                if item.index not in history_indices:
+                    history_as_verts.append(item)
+
+    selection = []
+    vert_indices = []
+    for vert in history_as_verts:
+        if len(selection) == verts_to_grab:
+            break
+        coords = vert.co
+        if global_matrix_multiplier:
+            coords = global_matrix_multiplier @ coords
+        if vert.index not in vert_indices:
+            vert_indices.append(vert.index)
+            selection.append(coords)
+
+    for vert in (v for v in src_mesh.verts if v.select):
+        if len(selection) == verts_to_grab:
+            break
+        coords = vert.co
+        if global_matrix_multiplier:
+            coords = global_matrix_multiplier @ coords
+        if vert.index not in vert_indices:
+            vert_indices.append(vert.index)
+            selection.append(coords)
+
+    if len(selection) == verts_to_grab:
+        return selection
+    else:
+        raise maplus_except.InsufficientSelectionError()
 
 
 def return_normal_coords(mesh_object,
                          global_matrix_multiplier=None):
-    if type(mesh_object.data) == bpy.types.Mesh:
-
-        # Todo, check for a better way to handle/if this is needed
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.object.editmode_toggle()
-
-        # Init source mesh
-        src_mesh = bmesh.new()
-        src_mesh.from_mesh(mesh_object.data)
-        src_mesh.select_history.validate()
-
-        face_elems = []
-        face_indices = []
-        normal = []
-        for element in src_mesh.select_history:
-            if type(element) == bmesh.types.BMFace:
-                face_elems.append(element)
-                face_indices.append(element.index)
-                break
-
-        for face in (f for f in src_mesh.faces if f.select):
-            if not (face.index in face_indices):
-                face_elems.append(face)
-                break
-
-        if not face_elems:
-            # Todo, make proper exception or modify old
-            raise maplus_except.InsufficientSelectionError()
-        if global_matrix_multiplier:
-            face_normal_origin = (
-                global_matrix_multiplier @
-                face_elems[0].calc_center_median()
-            )
-            face_normal_endpoint = (
-                global_matrix_multiplier @
-                (face_elems[0].calc_center_median() + face_elems[0].normal)
-            )
-        else:
-            face_normal_origin = face_elems[0].calc_center_median()
-            face_normal_endpoint = face_normal_origin + face_elems[0].normal
-
-        normal.extend(
-            [face_normal_origin,
-             face_normal_endpoint]
-        )
-        return normal
-
-    else:
+    if type(mesh_object.data) != bpy.types.Mesh:
         raise maplus_except.NonMeshGrabError(mesh_object)
+    # Todo, check for a better way to handle/if this is needed
+    bpy.ops.object.editmode_toggle()
+    bpy.ops.object.editmode_toggle()
+
+    # Init source mesh
+    src_mesh = bmesh.new()
+    src_mesh.from_mesh(mesh_object.data)
+    src_mesh.select_history.validate()
+
+    face_elems = []
+    face_indices = []
+    normal = []
+    for element in src_mesh.select_history:
+        if type(element) == bmesh.types.BMFace:
+            face_elems.append(element)
+            face_indices.append(element.index)
+            break
+
+    for face in (f for f in src_mesh.faces if f.select):
+        if face.index not in face_indices:
+            face_elems.append(face)
+            break
+
+    if not face_elems:
+        # Todo, make proper exception or modify old
+        raise maplus_except.InsufficientSelectionError()
+    if global_matrix_multiplier:
+        face_normal_origin = (
+            global_matrix_multiplier @
+            face_elems[0].calc_center_median()
+        )
+        face_normal_endpoint = (
+            global_matrix_multiplier @
+            (face_elems[0].calc_center_median() + face_elems[0].normal)
+        )
+    else:
+        face_normal_origin = face_elems[0].calc_center_median()
+        face_normal_endpoint = face_normal_origin + face_elems[0].normal
+
+    normal.extend(
+        [face_normal_origin,
+         face_normal_endpoint]
+    )
+    return normal
 
 
 def return_avg_vert_pos(mesh_object,
                         global_matrix_multiplier=None):
-    if type(mesh_object.data) == bpy.types.Mesh:
-
-        # Todo, check for a better way to handle/if this is needed
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.object.editmode_toggle()
-
-        # Init source mesh
-        src_mesh = bmesh.new()
-        src_mesh.from_mesh(mesh_object.data)
-
-        selection = []
-        vert_indices = []
-        # for vert in (v for v in src_mesh.verts if v.select):
-        for vert in (v for v in src_mesh.verts if v.select):
-            coords = vert.co
-            if global_matrix_multiplier:
-                coords = global_matrix_multiplier @ coords
-            if not (vert.index in vert_indices):
-                vert_indices.append(vert.index)
-                selection.append(coords)
-
-        if len(selection) > 0:
-            average_position = mathutils.Vector((0, 0, 0))
-            for item in selection:
-                average_position += item
-            average_position /= len(selection)
-            return [average_position]
-        else:
-            raise maplus_except.InsufficientSelectionError()
-    else:
+    if type(mesh_object.data) != bpy.types.Mesh:
         raise maplus_except.NonMeshGrabError(mesh_object)
+    # Todo, check for a better way to handle/if this is needed
+    bpy.ops.object.editmode_toggle()
+    bpy.ops.object.editmode_toggle()
+
+    # Init source mesh
+    src_mesh = bmesh.new()
+    src_mesh.from_mesh(mesh_object.data)
+
+    selection = []
+    vert_indices = []
+        # for vert in (v for v in src_mesh.verts if v.select):
+    for vert in (v for v in src_mesh.verts if v.select):
+        coords = vert.co
+        if global_matrix_multiplier:
+            coords = global_matrix_multiplier @ coords
+        if vert.index not in vert_indices:
+            vert_indices.append(vert.index)
+            selection.append(coords)
+
+    if not selection:
+        raise maplus_except.InsufficientSelectionError()
+    average_position = mathutils.Vector((0, 0, 0))
+    for item in selection:
+        average_position += item
+    average_position /= len(selection)
+    return [average_position]
 
 
 # For the ambiguous "internal storage slots", which can be any geom type in
 # [POINT, LINE, PLANE]. Must return at least 1 selected vert (for a point).
 def return_at_least_one_selected_vert(mesh_object,
                                       global_matrix_multiplier=None):
-    if type(mesh_object.data) == bpy.types.Mesh:
-
-        # Todo, check for a better way to handle/if this is needed
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.object.editmode_toggle()
-
-        # Init source mesh
-        src_mesh = bmesh.new()
-        src_mesh.from_mesh(mesh_object.data)
-        src_mesh.select_history.validate()
-
-        history_indices = []
-        history_as_verts = []
-        for element in src_mesh.select_history:
-            if len(history_as_verts) == 3:
-                break
-            if type(element) == bmesh.types.BMVert:
-                if not (element.index in history_indices):
-                    history_as_verts.append(element)
-            else:
-                for item in element.verts:
-                    if len(history_as_verts) == 3:
-                        break
-                    if not (item.index in history_indices):
-                        history_as_verts.append(item)
-
-        selection = []
-        vert_indices = []
-        for vert in history_as_verts:
-            if len(selection) == 3:
-                break
-            coords = vert.co
-            if global_matrix_multiplier:
-                coords = global_matrix_multiplier @ coords
-            if not (vert.index in vert_indices):
-                vert_indices.append(vert.index)
-                selection.append(coords)
-        for vert in (v for v in src_mesh.verts if v.select):
-            if len(selection) == 3:
-                break
-            coords = vert.co
-            if global_matrix_multiplier:
-                coords = global_matrix_multiplier @ coords
-            if not (vert.index in vert_indices):
-                vert_indices.append(vert.index)
-                selection.append(coords)
-
-        if len(selection) > 0:
-            return selection
-        else:
-            raise maplus_except.InsufficientSelectionError()
-    else:
+    if type(mesh_object.data) != bpy.types.Mesh:
         raise maplus_except.NonMeshGrabError(mesh_object)
+    # Todo, check for a better way to handle/if this is needed
+    bpy.ops.object.editmode_toggle()
+    bpy.ops.object.editmode_toggle()
+
+    # Init source mesh
+    src_mesh = bmesh.new()
+    src_mesh.from_mesh(mesh_object.data)
+    src_mesh.select_history.validate()
+
+    history_indices = []
+    history_as_verts = []
+    for element in src_mesh.select_history:
+        if len(history_as_verts) == 3:
+            break
+        if type(element) == bmesh.types.BMVert:
+            if element.index not in history_indices:
+                history_as_verts.append(element)
+        else:
+            for item in element.verts:
+                if len(history_as_verts) == 3:
+                    break
+                if item.index not in history_indices:
+                    history_as_verts.append(item)
+
+    selection = []
+    vert_indices = []
+    for vert in history_as_verts:
+        if len(selection) == 3:
+            break
+        coords = vert.co
+        if global_matrix_multiplier:
+            coords = global_matrix_multiplier @ coords
+        if vert.index not in vert_indices:
+            vert_indices.append(vert.index)
+            selection.append(coords)
+    for vert in (v for v in src_mesh.verts if v.select):
+        if len(selection) == 3:
+            break
+        coords = vert.co
+        if global_matrix_multiplier:
+            coords = global_matrix_multiplier @ coords
+        if vert.index not in vert_indices:
+            vert_indices.append(vert.index)
+            selection.append(coords)
+
+    if selection:
+        return selection
+    else:
+        raise maplus_except.InsufficientSelectionError()
 
 
 # Coordinate grabber, present on all geometry primitives (point, line, plane)
@@ -263,45 +253,44 @@ class MAPLUS_OT_GrabFromGeometryBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if not hasattr(self, "quick_op_target"):
+            prims = addon_data.prim_list
             active_item = prims[addon_data.active_list_item]
-        else:
-            if self.quick_op_target == "APTSRC":
-                active_item = addon_data.quick_align_pts_src
-            elif self.quick_op_target == "APTDEST":
-                active_item = addon_data.quick_align_pts_dest
+        elif self.quick_op_target == "ALNDEST":
+            active_item = addon_data.quick_align_lines_dest
 
-            elif self.quick_op_target == "DSSRC":
-                active_item = addon_data.quick_directional_slide_src
+        elif self.quick_op_target == "ALNSRC":
+            active_item = addon_data.quick_align_lines_src
+        elif self.quick_op_target == "APLDEST":
+            active_item = addon_data.quick_align_planes_dest
+        elif self.quick_op_target == "APLSRC":
+            active_item = addon_data.quick_align_planes_src
+        elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
+            active_item = addon_data.quick_align_planes_set_origin_mode_dest
 
-            elif self.quick_op_target == "SMESRC":
-                active_item = addon_data.quick_scale_match_edge_src
-            elif self.quick_op_target == "SMEDEST":
-                active_item = addon_data.quick_scale_match_edge_dest
+        elif self.quick_op_target == "APTDEST":
+            active_item = addon_data.quick_align_pts_dest
 
-            elif self.quick_op_target == "ALNSRC":
-                active_item = addon_data.quick_align_lines_src
-            elif self.quick_op_target == "ALNDEST":
-                active_item = addon_data.quick_align_lines_dest
+        elif self.quick_op_target == "APTSRC":
+            active_item = addon_data.quick_align_pts_src
+        elif self.quick_op_target == "AXRSRC":
+            active_item = addon_data.quick_axis_rotate_src
 
-            elif self.quick_op_target == "AXRSRC":
-                active_item = addon_data.quick_axis_rotate_src
+        elif self.quick_op_target == "CALCRESULT":
+            active_item = addon_data.quick_calc_result_item
 
-            elif self.quick_op_target == "APLSRC":
-                active_item = addon_data.quick_align_planes_src
-            elif self.quick_op_target == "APLDEST":
-                active_item = addon_data.quick_align_planes_dest
-            elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
-                active_item = addon_data.quick_align_planes_set_origin_mode_dest
+        elif self.quick_op_target == "DSSRC":
+            active_item = addon_data.quick_directional_slide_src
 
-            elif self.quick_op_target == "SLOT1":
-                active_item = addon_data.internal_storage_slot_1
-            elif self.quick_op_target == "SLOT2":
-                active_item = addon_data.internal_storage_slot_2
-            elif self.quick_op_target == "CALCRESULT":
-                active_item = addon_data.quick_calc_result_item
+        elif self.quick_op_target == "SLOT1":
+            active_item = addon_data.internal_storage_slot_1
+        elif self.quick_op_target == "SLOT2":
+            active_item = addon_data.internal_storage_slot_2
+        elif self.quick_op_target == "SMEDEST":
+            active_item = addon_data.quick_scale_match_edge_dest
 
+        elif self.quick_op_target == "SMESRC":
+            active_item = addon_data.quick_scale_match_edge_src
         matrix_multiplier = None
         if self.multiply_by_world_matrix:
             matrix_multiplier = get_active_object().matrix_world
@@ -452,45 +441,44 @@ class MAPLUS_OT_GrabAverageLocationBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if not hasattr(self, "quick_op_target"):
+            prims = addon_data.prim_list
             active_item = prims[addon_data.active_list_item]
-        else:
-            if self.quick_op_target == "APTSRC":
-                active_item = addon_data.quick_align_pts_src
-            elif self.quick_op_target == "APTDEST":
-                active_item = addon_data.quick_align_pts_dest
+        elif self.quick_op_target == "ALNDEST":
+            active_item = addon_data.quick_align_lines_dest
 
-            elif self.quick_op_target == "DSSRC":
-                active_item = addon_data.quick_directional_slide_src
+        elif self.quick_op_target == "ALNSRC":
+            active_item = addon_data.quick_align_lines_src
+        elif self.quick_op_target == "APLDEST":
+            active_item = addon_data.quick_align_planes_dest
+        elif self.quick_op_target == "APLSRC":
+            active_item = addon_data.quick_align_planes_src
+        elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
+            active_item = addon_data.quick_align_planes_set_origin_mode_dest
 
-            elif self.quick_op_target == "SMESRC":
-                active_item = addon_data.quick_scale_match_edge_src
-            elif self.quick_op_target == "SMEDEST":
-                active_item = addon_data.quick_scale_match_edge_dest
+        elif self.quick_op_target == "APTDEST":
+            active_item = addon_data.quick_align_pts_dest
 
-            elif self.quick_op_target == "ALNSRC":
-                active_item = addon_data.quick_align_lines_src
-            elif self.quick_op_target == "ALNDEST":
-                active_item = addon_data.quick_align_lines_dest
+        elif self.quick_op_target == "APTSRC":
+            active_item = addon_data.quick_align_pts_src
+        elif self.quick_op_target == "AXRSRC":
+            active_item = addon_data.quick_axis_rotate_src
 
-            elif self.quick_op_target == "AXRSRC":
-                active_item = addon_data.quick_axis_rotate_src
+        elif self.quick_op_target == "CALCRESULT":
+            active_item = addon_data.quick_calc_result_item
 
-            elif self.quick_op_target == "APLSRC":
-                active_item = addon_data.quick_align_planes_src
-            elif self.quick_op_target == "APLDEST":
-                active_item = addon_data.quick_align_planes_dest
-            elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
-                active_item = addon_data.quick_align_planes_set_origin_mode_dest
+        elif self.quick_op_target == "DSSRC":
+            active_item = addon_data.quick_directional_slide_src
 
-            elif self.quick_op_target == "SLOT1":
-                active_item = addon_data.internal_storage_slot_1
-            elif self.quick_op_target == "SLOT2":
-                active_item = addon_data.internal_storage_slot_2
-            elif self.quick_op_target == "CALCRESULT":
-                active_item = addon_data.quick_calc_result_item
+        elif self.quick_op_target == "SLOT1":
+            active_item = addon_data.internal_storage_slot_1
+        elif self.quick_op_target == "SLOT2":
+            active_item = addon_data.internal_storage_slot_2
+        elif self.quick_op_target == "SMEDEST":
+            active_item = addon_data.quick_scale_match_edge_dest
 
+        elif self.quick_op_target == "SMESRC":
+            active_item = addon_data.quick_scale_match_edge_src
         matrix_multiplier = None
         if self.multiply_by_world_matrix:
             matrix_multiplier = get_active_object().matrix_world
@@ -530,33 +518,32 @@ class MAPLUS_OT_GrabNormalBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if not hasattr(self, "quick_op_target"):
+            prims = addon_data.prim_list
             active_item = prims[addon_data.active_list_item]
-        else:
-            if self.quick_op_target == "DSSRC":
-                active_item = addon_data.quick_directional_slide_src
+        elif self.quick_op_target == "ALNDEST":
+            active_item = addon_data.quick_align_lines_dest
 
-            elif self.quick_op_target == "SMESRC":
-                active_item = addon_data.quick_scale_match_edge_src
-            elif self.quick_op_target == "SMEDEST":
-                active_item = addon_data.quick_scale_match_edge_dest
+        elif self.quick_op_target == "ALNSRC":
+            active_item = addon_data.quick_align_lines_src
+        elif self.quick_op_target == "AXRSRC":
+            active_item = addon_data.quick_axis_rotate_src
 
-            elif self.quick_op_target == "ALNSRC":
-                active_item = addon_data.quick_align_lines_src
-            elif self.quick_op_target == "ALNDEST":
-                active_item = addon_data.quick_align_lines_dest
+        elif self.quick_op_target == "CALCRESULT":
+            active_item = addon_data.quick_calc_result_item
 
-            elif self.quick_op_target == "AXRSRC":
-                active_item = addon_data.quick_axis_rotate_src
+        elif self.quick_op_target == "DSSRC":
+            active_item = addon_data.quick_directional_slide_src
 
-            elif self.quick_op_target == "SLOT1":
-                active_item = addon_data.internal_storage_slot_1
-            elif self.quick_op_target == "SLOT2":
-                active_item = addon_data.internal_storage_slot_2
-            elif self.quick_op_target == "CALCRESULT":
-                active_item = addon_data.quick_calc_result_item
+        elif self.quick_op_target == "SLOT1":
+            active_item = addon_data.internal_storage_slot_1
+        elif self.quick_op_target == "SLOT2":
+            active_item = addon_data.internal_storage_slot_2
+        elif self.quick_op_target == "SMEDEST":
+            active_item = addon_data.quick_scale_match_edge_dest
 
+        elif self.quick_op_target == "SMESRC":
+            active_item = addon_data.quick_scale_match_edge_src
         matrix_multiplier = None
         if self.multiply_by_world_matrix:
             matrix_multiplier = get_active_object().matrix_world
@@ -594,44 +581,44 @@ class MAPLUS_OT_GrabFromCursorBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, "quick_op_target"):
-            if self.quick_op_target == "APTSRC":
-                active_item = addon_data.quick_align_pts_src
-            elif self.quick_op_target == "APTDEST":
-                active_item = addon_data.quick_align_pts_dest
-
-            elif self.quick_op_target == "DSSRC":
-                active_item = addon_data.quick_directional_slide_src
-
-            elif self.quick_op_target == "SMESRC":
-                active_item = addon_data.quick_scale_match_edge_src
-            elif self.quick_op_target == "SMEDEST":
-                active_item = addon_data.quick_scale_match_edge_dest
+            if self.quick_op_target == "ALNDEST":
+                active_item = addon_data.quick_align_lines_dest
 
             elif self.quick_op_target == "ALNSRC":
                 active_item = addon_data.quick_align_lines_src
-            elif self.quick_op_target == "ALNDEST":
-                active_item = addon_data.quick_align_lines_dest
+            elif self.quick_op_target == "APLDEST":
+                active_item = addon_data.quick_align_planes_dest
+            elif self.quick_op_target == "APLSRC":
+                active_item = addon_data.quick_align_planes_src
+            elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
+                active_item = addon_data.quick_align_planes_set_origin_mode_dest
 
+            elif self.quick_op_target == "APTDEST":
+                active_item = addon_data.quick_align_pts_dest
+
+            elif self.quick_op_target == "APTSRC":
+                active_item = addon_data.quick_align_pts_src
             elif self.quick_op_target == "AXRSRC":
                 active_item = addon_data.quick_axis_rotate_src
 
-            elif self.quick_op_target == "APLSRC":
-                active_item = addon_data.quick_align_planes_src
-            elif self.quick_op_target == "APLDEST":
-                active_item = addon_data.quick_align_planes_dest
-            elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
-                active_item = addon_data.quick_align_planes_set_origin_mode_dest
+            elif self.quick_op_target == "CALCRESULT":
+                active_item = addon_data.quick_calc_result_item
+
+            elif self.quick_op_target == "DSSRC":
+                active_item = addon_data.quick_directional_slide_src
 
             elif self.quick_op_target == "SLOT1":
                 active_item = addon_data.internal_storage_slot_1
             elif self.quick_op_target == "SLOT2":
                 active_item = addon_data.internal_storage_slot_2
-            elif self.quick_op_target == "CALCRESULT":
-                active_item = addon_data.quick_calc_result_item
+            elif self.quick_op_target == "SMEDEST":
+                active_item = addon_data.quick_scale_match_edge_dest
 
+            elif self.quick_op_target == "SMESRC":
+                active_item = addon_data.quick_scale_match_edge_src
         else:
+            prims = addon_data.prim_list
             active_item = prims[addon_data.active_list_item]
 
         setattr(
@@ -653,44 +640,44 @@ class MAPLUS_OT_SendCoordToCursorBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = bpy.context.scene.maplus_data.prim_list
         if hasattr(self, "quick_op_target"):
-            if self.quick_op_target == "APTSRC":
-                active_item = addon_data.quick_align_pts_src
-            elif self.quick_op_target == "APTDEST":
-                active_item = addon_data.quick_align_pts_dest
-
-            elif self.quick_op_target == "DSSRC":
-                active_item = addon_data.quick_directional_slide_src
-
-            elif self.quick_op_target == "SMESRC":
-                active_item = addon_data.quick_scale_match_edge_src
-            elif self.quick_op_target == "SMEDEST":
-                active_item = addon_data.quick_scale_match_edge_dest
+            if self.quick_op_target == "ALNDEST":
+                active_item = addon_data.quick_align_lines_dest
 
             elif self.quick_op_target == "ALNSRC":
                 active_item = addon_data.quick_align_lines_src
-            elif self.quick_op_target == "ALNDEST":
-                active_item = addon_data.quick_align_lines_dest
+            elif self.quick_op_target == "APLDEST":
+                active_item = addon_data.quick_align_planes_dest
+            elif self.quick_op_target == "APLSRC":
+                active_item = addon_data.quick_align_planes_src
+            elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
+                active_item = addon_data.quick_align_planes_set_origin_mode_dest
 
+            elif self.quick_op_target == "APTDEST":
+                active_item = addon_data.quick_align_pts_dest
+
+            elif self.quick_op_target == "APTSRC":
+                active_item = addon_data.quick_align_pts_src
             elif self.quick_op_target == "AXRSRC":
                 active_item = addon_data.quick_axis_rotate_src
 
-            elif self.quick_op_target == "APLSRC":
-                active_item = addon_data.quick_align_planes_src
-            elif self.quick_op_target == "APLDEST":
-                active_item = addon_data.quick_align_planes_dest
-            elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
-                active_item = addon_data.quick_align_planes_set_origin_mode_dest
+            elif self.quick_op_target == "CALCRESULT":
+                active_item = addon_data.quick_calc_result_item
+
+            elif self.quick_op_target == "DSSRC":
+                active_item = addon_data.quick_directional_slide_src
 
             elif self.quick_op_target == "SLOT1":
                 active_item = addon_data.internal_storage_slot_1
             elif self.quick_op_target == "SLOT2":
                 active_item = addon_data.internal_storage_slot_2
-            elif self.quick_op_target == "CALCRESULT":
-                active_item = addon_data.quick_calc_result_item
+            elif self.quick_op_target == "SMEDEST":
+                active_item = addon_data.quick_scale_match_edge_dest
 
+            elif self.quick_op_target == "SMESRC":
+                active_item = addon_data.quick_scale_match_edge_src
         else:
+            prims = bpy.context.scene.maplus_data.prim_list
             active_item = prims[addon_data.active_list_item]
 
         bpy.context.scene.cursor.location = getattr(
@@ -3921,39 +3908,39 @@ class MAPLUS_OT_SwapPointsBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, "quick_op_target"):
-            if self.quick_op_target == "DSSRC":
-                active_item = addon_data.quick_directional_slide_src
-
-            elif self.quick_op_target == "SMESRC":
-                active_item = addon_data.quick_scale_match_edge_src
-            elif self.quick_op_target == "SMEDEST":
-                active_item = addon_data.quick_scale_match_edge_dest
+            if self.quick_op_target == "ALNDEST":
+                active_item = addon_data.quick_align_lines_dest
 
             elif self.quick_op_target == "ALNSRC":
                 active_item = addon_data.quick_align_lines_src
-            elif self.quick_op_target == "ALNDEST":
-                active_item = addon_data.quick_align_lines_dest
+            elif self.quick_op_target == "APLDEST":
+                active_item = addon_data.quick_align_planes_dest
+            elif self.quick_op_target == "APLSRC":
+                active_item = addon_data.quick_align_planes_src
+            elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
+                active_item = addon_data.quick_align_planes_set_origin_mode_dest
 
             elif self.quick_op_target == "AXRSRC":
                 active_item = addon_data.quick_axis_rotate_src
 
-            elif self.quick_op_target == "APLSRC":
-                active_item = addon_data.quick_align_planes_src
-            elif self.quick_op_target == "APLDEST":
-                active_item = addon_data.quick_align_planes_dest
-            elif self.quick_op_target == "APL_SET_ORIGIN_MODE_DEST":
-                active_item = addon_data.quick_align_planes_set_origin_mode_dest
+            elif self.quick_op_target == "CALCRESULT":
+                active_item = addon_data.quick_calc_result_item
+
+            elif self.quick_op_target == "DSSRC":
+                active_item = addon_data.quick_directional_slide_src
 
             elif self.quick_op_target == "SLOT1":
                 active_item = addon_data.internal_storage_slot_1
             elif self.quick_op_target == "SLOT2":
                 active_item = addon_data.internal_storage_slot_2
-            elif self.quick_op_target == "CALCRESULT":
-                active_item = addon_data.quick_calc_result_item
+            elif self.quick_op_target == "SMEDEST":
+                active_item = addon_data.quick_scale_match_edge_dest
 
+            elif self.quick_op_target == "SMESRC":
+                active_item = addon_data.quick_scale_match_edge_src
         else:
+            prims = addon_data.prim_list
             active_item = prims[addon_data.active_list_item]
 
         source = getattr(active_item, self.targets[0])
@@ -4618,9 +4605,12 @@ def get_modified_global_coords(geometry, kind):
         global_modified[0] *= geometry.pt_multiplier
 
     elif kind == 'LINE':
-        global_modified.append(mathutils.Vector(geometry.line_start))
-        global_modified.append(mathutils.Vector(geometry.line_end))
-
+        global_modified.extend(
+            (
+                mathutils.Vector(geometry.line_start),
+                mathutils.Vector(geometry.line_end),
+            )
+        )
         line = mathutils.Vector(
             global_modified[1] -
             global_modified[0]
@@ -4636,11 +4626,15 @@ def get_modified_global_coords(geometry, kind):
         )
 
     elif kind == 'PLANE':
-        global_modified.append(mathutils.Vector(geometry.plane_pt_a))
-        global_modified.append(mathutils.Vector(geometry.plane_pt_b))
-        global_modified.append(mathutils.Vector(geometry.plane_pt_c))
+        global_modified.extend(
+            (
+                mathutils.Vector(geometry.plane_pt_a),
+                mathutils.Vector(geometry.plane_pt_b),
+                mathutils.Vector(geometry.plane_pt_c),
+            )
+        )
     else:
-        return list()
+        return []
 
     return global_modified
 
@@ -4723,10 +4717,6 @@ class MAPLUS_OT_ApplyGeomModifiers(bpy.types.Operator):
                 ) + vec
             )
             active_item.ln_multiplier = 1
-        elif active_item.kind == 'PLANE':
-            # Apply future plane modifiers here
-            pass
-
         return {'FINISHED'}
 
 

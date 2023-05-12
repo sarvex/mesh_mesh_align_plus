@@ -19,12 +19,12 @@ class MAPLUS_OT_CalcLineLengthBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_attrib = 'quick_calc_result_numeric'
             calc_target_item = addon_data.internal_storage_slot_1
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             result_attrib = 'single_calc_result'
             calc_target_item = prims[active_calculation.single_calc_target]
@@ -37,14 +37,13 @@ class MAPLUS_OT_CalcLineLengthBase(bpy.types.Operator):
                  ' a line')
             )
             return {'CANCELLED'}
-        if hasattr(self, 'quick_calc_target'):
-            if calc_target_item.kind != 'LINE':
-                self.report(
-                    {'WARNING'},
-                    ('Operand type warning: Slot 1 (the target) is not'
-                     ' explicitly using the correct type for this'
-                     ' calculation (type should be set to "Line").')
-                )
+        if hasattr(self, 'quick_calc_target') and calc_target_item.kind != 'LINE':
+            self.report(
+                {'WARNING'},
+                ('Operand type warning: Slot 1 (the target) is not'
+                 ' explicitly using the correct type for this'
+                 ' calculation (type should be set to "Line").')
+            )
 
         src_global_data = maplus_geom.get_modified_global_coords(
             geometry=calc_target_item,
@@ -79,10 +78,10 @@ class MAPLUS_OT_QuickCalcLineLength(MAPLUS_OT_CalcLineLengthBase):
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        if (addon_data.quick_calc_check_types and
-                addon_data.internal_storage_slot_1.kind != 'LINE'):
-            return False
-        return True
+        return (
+            not addon_data.quick_calc_check_types
+            or addon_data.internal_storage_slot_1.kind == 'LINE'
+        )
 
 
 class MAPLUS_OT_CalcRotationalDiffBase(bpy.types.Operator):
@@ -95,37 +94,37 @@ class MAPLUS_OT_CalcRotationalDiffBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_attrib = 'quick_calc_result_numeric'
             calc_target_one = addon_data.internal_storage_slot_1
             calc_target_two = addon_data.internal_storage_slot_2
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             result_attrib = 'multi_calc_result'
             calc_target_one = prims[active_calculation.multi_calc_target_one]
             calc_target_two = prims[active_calculation.multi_calc_target_two]
 
-        if ((not hasattr(self, 'quick_calc_target'))
-                and not (calc_target_one.kind == 'LINE'
-                and calc_target_two.kind == 'LINE')):
+        if not hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'LINE' or calc_target_two.kind != 'LINE'
+        ):
             self.report(
                 {'ERROR'},
                 ('Wrong operand: "Calculate Rotational Difference" can'
                  ' only operate on two lines')
             )
             return {'CANCELLED'}
-        if hasattr(self, 'quick_calc_target'):
-            if (calc_target_one.kind != 'LINE'
-                    or calc_target_two.kind != 'LINE'):
-                self.report(
-                    {'WARNING'},
-                    ('Operand type warning: Slot 1 and/or Slot 2 are not'
-                     ' explicitly using the correct types for this'
-                     ' calculation (item type for both should be'
-                     ' set to "Line").')
-                )
+        if hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'LINE' or calc_target_two.kind != 'LINE'
+        ):
+            self.report(
+                {'WARNING'},
+                ('Operand type warning: Slot 1 and/or Slot 2 are not'
+                 ' explicitly using the correct types for this'
+                 ' calculation (item type for both should be'
+                 ' set to "Line").')
+            )
 
         src_global_data = maplus_geom.get_modified_global_coords(
             geometry=calc_target_one,
@@ -176,11 +175,11 @@ class MAPLUS_OT_QuickCalcRotationalDiff(MAPLUS_OT_CalcRotationalDiffBase):
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        if (addon_data.quick_calc_check_types and
-                (addon_data.internal_storage_slot_1.kind != 'LINE' or
-                 addon_data.internal_storage_slot_2.kind != 'LINE')):
-            return False
-        return True
+        return (
+            not addon_data.quick_calc_check_types
+            or addon_data.internal_storage_slot_1.kind == 'LINE'
+            and addon_data.internal_storage_slot_2.kind == 'LINE'
+        )
 
 
 class MAPLUS_OT_ComposeNewLineFromOriginBase(bpy.types.Operator):
@@ -191,12 +190,12 @@ class MAPLUS_OT_ComposeNewLineFromOriginBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_item = active_calculation.quick_calc_result_item
             calc_target_item = addon_data.internal_storage_slot_1
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             bpy.ops.maplus.addnewline()
             result_item = prims[-1]
@@ -210,14 +209,13 @@ class MAPLUS_OT_ComposeNewLineFromOriginBase(bpy.types.Operator):
                  ' only operate on a line')
             )
             return {'CANCELLED'}
-        if hasattr(self, 'quick_calc_target'):
-            if calc_target_item.kind != 'LINE':
-                self.report(
-                    {'WARNING'},
-                    ('Operand type warning: Slot 1 (the target) is not'
-                     ' explicitly using the correct type for this'
-                     ' calculation (type should be set to "Line").')
-                )
+        if hasattr(self, 'quick_calc_target') and calc_target_item.kind != 'LINE':
+            self.report(
+                {'WARNING'},
+                ('Operand type warning: Slot 1 (the target) is not'
+                 ' explicitly using the correct type for this'
+                 ' calculation (type should be set to "Line").')
+            )
 
         start_loc = mathutils.Vector((0, 0, 0))
         src_global_data = maplus_geom.get_modified_global_coords(
@@ -264,10 +262,10 @@ class MAPLUS_OT_QuickComposeNewLineFromOrigin(MAPLUS_OT_ComposeNewLineFromOrigin
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        if (addon_data.quick_calc_check_types and
-                addon_data.internal_storage_slot_1.kind != 'LINE'):
-            return False
-        return True
+        return (
+            not addon_data.quick_calc_check_types
+            or addon_data.internal_storage_slot_1.kind == 'LINE'
+        )
 
 
 class MAPLUS_OT_ComposeNormalFromPlaneBase(bpy.types.Operator):
@@ -278,33 +276,34 @@ class MAPLUS_OT_ComposeNormalFromPlaneBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_item = active_calculation.quick_calc_result_item
             calc_target_item = addon_data.internal_storage_slot_1
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             bpy.ops.maplus.addnewline()
             result_item = prims[-1]
             calc_target_item = prims[active_calculation.single_calc_target]
 
-        if ((not hasattr(self, 'quick_calc_target'))
-                and not calc_target_item.kind == 'PLANE'):
+        if (
+            not hasattr(self, 'quick_calc_target')
+            and calc_target_item.kind != 'PLANE'
+        ):
             self.report(
                 {'ERROR'},
                 ('Wrong operand: "Get Plane Normal" can only operate on'
                  ' a plane')
             )
             return {'CANCELLED'}
-        if hasattr(self, 'quick_calc_target'):
-            if calc_target_item.kind != 'PLANE':
-                self.report(
-                    {'WARNING'},
-                    ('Operand type warning: Slot 1 (the target) is not'
-                     ' explicitly using the correct type for this'
-                     ' calculation (type should be set to "Plane").')
-                )
+        if hasattr(self, 'quick_calc_target') and calc_target_item.kind != 'PLANE':
+            self.report(
+                {'WARNING'},
+                ('Operand type warning: Slot 1 (the target) is not'
+                 ' explicitly using the correct type for this'
+                 ' calculation (type should be set to "Plane").')
+            )
 
         src_global_data = maplus_geom.get_modified_global_coords(
             geometry=calc_target_item,
@@ -320,9 +319,7 @@ class MAPLUS_OT_ComposeNormalFromPlaneBase(bpy.types.Operator):
         )
         normal = line_BA.cross(line_BC)
         normal.normalize()
-        start_loc = mathutils.Vector(
-            calc_target_item.plane_pt_b[0:3]
-        )
+        start_loc = mathutils.Vector(calc_target_item.plane_pt_b[:3])
 
         result_item.kind = 'LINE'
         result_item.line_start = start_loc
@@ -360,10 +357,10 @@ class MAPLUS_OT_QuickComposeNormalFromPlane(MAPLUS_OT_ComposeNormalFromPlaneBase
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        if (addon_data.quick_calc_check_types and
-                addon_data.internal_storage_slot_1.kind != 'PLANE'):
-            return False
-        return True
+        return (
+            not addon_data.quick_calc_check_types
+            or addon_data.internal_storage_slot_1.kind == 'PLANE'
+        )
 
 
 class MAPLUS_OT_ComposeNewLineFromPointBase(bpy.types.Operator):
@@ -377,12 +374,12 @@ class MAPLUS_OT_ComposeNewLineFromPointBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_item = active_calculation.quick_calc_result_item
             calc_target_item = addon_data.internal_storage_slot_1
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             bpy.ops.maplus.addnewline()
             result_item = prims[-1]
@@ -396,14 +393,13 @@ class MAPLUS_OT_ComposeNewLineFromPointBase(bpy.types.Operator):
                  ' only operate on a point')
             )
             return {'CANCELLED'}
-        if hasattr(self, 'quick_calc_target'):
-            if calc_target_item.kind != 'POINT':
-                self.report(
-                    {'WARNING'},
-                    ('Operand type warning: Slot 1 (the target) is not'
-                     ' explicitly using the correct type for this'
-                     ' calculation (type should be set to "Point").')
-                )
+        if hasattr(self, 'quick_calc_target') and calc_target_item.kind != 'POINT':
+            self.report(
+                {'WARNING'},
+                ('Operand type warning: Slot 1 (the target) is not'
+                 ' explicitly using the correct type for this'
+                 ' calculation (type should be set to "Point").')
+            )
 
         start_loc = mathutils.Vector((0, 0, 0))
 
@@ -454,10 +450,10 @@ class MAPLUS_OT_QuickComposeNewLineFromPoint(MAPLUS_OT_ComposeNewLineFromPointBa
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        if (addon_data.quick_calc_check_types and
-                addon_data.internal_storage_slot_1.kind != 'POINT'):
-            return False
-        return True
+        return (
+            not addon_data.quick_calc_check_types
+            or addon_data.internal_storage_slot_1.kind == 'POINT'
+        )
 
 
 class MAPLUS_OT_ComposeNewLineAtPointLocationBase(bpy.types.Operator):
@@ -468,13 +464,13 @@ class MAPLUS_OT_ComposeNewLineAtPointLocationBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_item = active_calculation.quick_calc_result_item
             calc_target_one = addon_data.internal_storage_slot_1
             calc_target_two = addon_data.internal_storage_slot_2
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             bpy.ops.maplus.addnewline()
             result_item = prims[-1]
@@ -484,7 +480,7 @@ class MAPLUS_OT_ComposeNewLineAtPointLocationBase(bpy.types.Operator):
             item.kind: item for item in [calc_target_one, calc_target_two]
         }
 
-        if not ('POINT' in targets_by_kind and 'LINE' in targets_by_kind):
+        if 'POINT' not in targets_by_kind or 'LINE' not in targets_by_kind:
             self.report(
                 {'ERROR'},
                 ('Wrong operand(s): "Compose New Line at Point" can'
@@ -539,17 +535,18 @@ class MAPLUS_OT_QuickComposeNewLineAtPointLocation(MAPLUS_OT_ComposeNewLineAtPoi
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        slot_kinds = set(
-            [item.kind for item in [
-                    addon_data.internal_storage_slot_1,
-                    addon_data.internal_storage_slot_2
-                ]
+        slot_kinds = {
+            item.kind
+            for item in [
+                addon_data.internal_storage_slot_1,
+                addon_data.internal_storage_slot_2,
             ]
+        }
+        return (
+            not addon_data.quick_calc_check_types
+            or 'POINT' in slot_kinds
+            and 'LINE' in slot_kinds
         )
-        if (addon_data.quick_calc_check_types and
-                ('POINT' not in slot_kinds or 'LINE' not in slot_kinds)):
-            return False
-        return True
 
 
 class MAPLUS_OT_CalcDistanceBetweenPointsBase(bpy.types.Operator):
@@ -560,37 +557,37 @@ class MAPLUS_OT_CalcDistanceBetweenPointsBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_attrib = 'quick_calc_result_numeric'
             calc_target_one = addon_data.internal_storage_slot_1
             calc_target_two = addon_data.internal_storage_slot_2
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             result_attrib = 'multi_calc_result'
             calc_target_one = prims[active_calculation.multi_calc_target_one]
             calc_target_two = prims[active_calculation.multi_calc_target_two]
 
-        if ((not hasattr(self, 'quick_calc_target'))
-                and not (calc_target_one.kind == 'POINT'
-                and calc_target_two.kind == 'POINT')):
+        if not hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'POINT' or calc_target_two.kind != 'POINT'
+        ):
             self.report(
                 {'ERROR'},
                 ('Wrong operand: "Calculate Distance Between Points" can'
                  ' only operate on two points')
             )
             return {'CANCELLED'}
-        if hasattr(self, 'quick_calc_target'):
-            if (calc_target_one.kind != 'POINT'
-                    or calc_target_two.kind != 'POINT'):
-                self.report(
-                    {'WARNING'},
-                    ('Operand type warning: Slot 1 and/or Slot 2 are not'
-                     ' explicitly using the correct types for this'
-                     ' calculation (item type for both should be'
-                     ' set to "Point").')
-                )
+        if hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'POINT' or calc_target_two.kind != 'POINT'
+        ):
+            self.report(
+                {'WARNING'},
+                ('Operand type warning: Slot 1 and/or Slot 2 are not'
+                 ' explicitly using the correct types for this'
+                 ' calculation (item type for both should be'
+                 ' set to "Point").')
+            )
 
         src_global_data = maplus_geom.get_modified_global_coords(
             geometry=calc_target_one,
@@ -629,11 +626,11 @@ class MAPLUS_OT_QuickCalcDistanceBetweenPoints(MAPLUS_OT_CalcDistanceBetweenPoin
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        if (addon_data.quick_calc_check_types and
-                (addon_data.internal_storage_slot_1.kind != 'POINT' or
-                 addon_data.internal_storage_slot_2.kind != 'POINT')):
-            return False
-        return True
+        return (
+            not addon_data.quick_calc_check_types
+            or addon_data.internal_storage_slot_1.kind == 'POINT'
+            and addon_data.internal_storage_slot_2.kind == 'POINT'
+        )
 
 
 class MAPLUS_OT_ComposeNewLineFromPointsBase(bpy.types.Operator):
@@ -644,38 +641,38 @@ class MAPLUS_OT_ComposeNewLineFromPointsBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_item = active_calculation.quick_calc_result_item
             calc_target_one = addon_data.internal_storage_slot_1
             calc_target_two = addon_data.internal_storage_slot_2
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             bpy.ops.maplus.addnewline()
             result_item = prims[-1]
             calc_target_one = prims[active_calculation.multi_calc_target_one]
             calc_target_two = prims[active_calculation.multi_calc_target_two]
 
-        if ((not hasattr(self, 'quick_calc_target'))
-                and not (calc_target_one.kind == 'POINT'
-                and calc_target_two.kind == 'POINT')):
+        if not hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'POINT' or calc_target_two.kind != 'POINT'
+        ):
             self.report(
                 {'ERROR'},
                 ('Wrong operand: "Compose New Line from Points" can'
                  ' only operate on two points')
             )
             return {'CANCELLED'}
-        if hasattr(self, 'quick_calc_target'):
-            if (calc_target_one.kind != 'POINT'
-                    or calc_target_two.kind != 'POINT'):
-                self.report(
-                    {'WARNING'},
-                    ('Operand type warning: Slot 1 and/or Slot 2 are not'
-                     ' explicitly using the correct types for this'
-                     ' calculation (item type for both should be'
-                     ' set to "Point").')
-                )
+        if hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'POINT' or calc_target_two.kind != 'POINT'
+        ):
+            self.report(
+                {'WARNING'},
+                ('Operand type warning: Slot 1 and/or Slot 2 are not'
+                 ' explicitly using the correct types for this'
+                 ' calculation (item type for both should be'
+                 ' set to "Point").')
+            )
 
         src_global_data = maplus_geom.get_modified_global_coords(
             geometry=calc_target_one,
@@ -724,11 +721,11 @@ class MAPLUS_OT_QuickComposeNewLineFromPoints(MAPLUS_OT_ComposeNewLineFromPoints
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        if (addon_data.quick_calc_check_types and
-                (addon_data.internal_storage_slot_1.kind != 'POINT' or
-                 addon_data.internal_storage_slot_2.kind != 'POINT')):
-            return False
-        return True
+        return (
+            not addon_data.quick_calc_check_types
+            or addon_data.internal_storage_slot_1.kind == 'POINT'
+            and addon_data.internal_storage_slot_2.kind == 'POINT'
+        )
 
 
 class MAPLUS_OT_ComposeNewLineVectorAdditionBase(bpy.types.Operator):
@@ -739,38 +736,38 @@ class MAPLUS_OT_ComposeNewLineVectorAdditionBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_item = active_calculation.quick_calc_result_item
             calc_target_one = addon_data.internal_storage_slot_1
             calc_target_two = addon_data.internal_storage_slot_2
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             bpy.ops.maplus.addnewline()
             result_item = prims[-1]
             calc_target_one = prims[active_calculation.multi_calc_target_one]
             calc_target_two = prims[active_calculation.multi_calc_target_two]
 
-        if ((not hasattr(self, 'quick_calc_target'))
-                and not (calc_target_one.kind == 'LINE'
-                and calc_target_two.kind == 'LINE')):
+        if not hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'LINE' or calc_target_two.kind != 'LINE'
+        ):
             self.report(
                 {'ERROR'},
                 ('Wrong operand: "Add Lines" can only operate on'
                  ' two lines')
             )
             return {'CANCELLED'}
-        if hasattr(self, 'quick_calc_target'):
-            if (calc_target_one.kind != 'LINE'
-                    or calc_target_two.kind != 'LINE'):
-                self.report(
-                    {'WARNING'},
-                    ('Operand type warning: Slot 1 and/or Slot 2 are not'
-                     ' explicitly using the correct types for this'
-                     ' calculation (item type for both should be'
-                     ' set to "Line").')
-                )
+        if hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'LINE' or calc_target_two.kind != 'LINE'
+        ):
+            self.report(
+                {'WARNING'},
+                ('Operand type warning: Slot 1 and/or Slot 2 are not'
+                 ' explicitly using the correct types for this'
+                 ' calculation (item type for both should be'
+                 ' set to "Line").')
+            )
 
         start_loc = mathutils.Vector((0, 0, 0))
 
@@ -821,11 +818,11 @@ class MAPLUS_OT_QuickComposeNewLineVectorAddition(MAPLUS_OT_ComposeNewLineVector
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        if (addon_data.quick_calc_check_types and
-                (addon_data.internal_storage_slot_1.kind != 'LINE' or
-                 addon_data.internal_storage_slot_2.kind != 'LINE')):
-            return False
-        return True
+        return (
+            not addon_data.quick_calc_check_types
+            or addon_data.internal_storage_slot_1.kind == 'LINE'
+            and addon_data.internal_storage_slot_2.kind == 'LINE'
+        )
 
 
 class MAPLUS_OT_ComposeNewLineVectorSubtractionBase(bpy.types.Operator):
@@ -839,38 +836,38 @@ class MAPLUS_OT_ComposeNewLineVectorSubtractionBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_item = active_calculation.quick_calc_result_item
             calc_target_one = addon_data.internal_storage_slot_1
             calc_target_two = addon_data.internal_storage_slot_2
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             bpy.ops.maplus.addnewline()
             result_item = prims[-1]
             calc_target_one = prims[active_calculation.multi_calc_target_one]
             calc_target_two = prims[active_calculation.multi_calc_target_two]
 
-        if ((not hasattr(self, 'quick_calc_target'))
-                and not (calc_target_one.kind == 'LINE'
-                and calc_target_two.kind == 'LINE')):
+        if not hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'LINE' or calc_target_two.kind != 'LINE'
+        ):
             self.report(
                 {'ERROR'},
                 ('Wrong operand: "Add Lines" can only operate on'
                  ' two lines')
             )
             return {'CANCELLED'}
-        if hasattr(self, 'quick_calc_target'):
-            if (calc_target_one.kind != 'LINE'
-                    or calc_target_two.kind != 'LINE'):
-                self.report(
-                    {'WARNING'},
-                    ('Operand type warning: Slot 1 and/or Slot 2 are not'
-                     ' explicitly using the correct types for this'
-                     ' calculation (item type for both should be'
-                     ' set to "Line").')
-                )
+        if hasattr(self, 'quick_calc_target') and (
+            calc_target_one.kind != 'LINE' or calc_target_two.kind != 'LINE'
+        ):
+            self.report(
+                {'WARNING'},
+                ('Operand type warning: Slot 1 and/or Slot 2 are not'
+                 ' explicitly using the correct types for this'
+                 ' calculation (item type for both should be'
+                 ' set to "Line").')
+            )
 
         start_loc = mathutils.Vector((0, 0, 0))
 
@@ -927,11 +924,11 @@ class MAPLUS_OT_QuickComposeNewLineVectorSubtraction(MAPLUS_OT_ComposeNewLineVec
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        if (addon_data.quick_calc_check_types and
-                (addon_data.internal_storage_slot_1.kind != 'LINE' or
-                 addon_data.internal_storage_slot_2.kind != 'LINE')):
-            return False
-        return True
+        return (
+            not addon_data.quick_calc_check_types
+            or addon_data.internal_storage_slot_1.kind == 'LINE'
+            and addon_data.internal_storage_slot_2.kind == 'LINE'
+        )
 
 
 class MAPLUS_OT_ComposePointIntersectingLinePlaneBase(bpy.types.Operator):
@@ -944,13 +941,13 @@ class MAPLUS_OT_ComposePointIntersectingLinePlaneBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
         if hasattr(self, 'quick_calc_target'):
             active_calculation = addon_data
             result_item = active_calculation.quick_calc_result_item
             calc_target_one = addon_data.internal_storage_slot_1
             calc_target_two = addon_data.internal_storage_slot_2
         else:
+            prims = addon_data.prim_list
             active_calculation = prims[addon_data.active_list_item]
             bpy.ops.maplus.addnewline()
             result_item = prims[-1]
@@ -960,7 +957,7 @@ class MAPLUS_OT_ComposePointIntersectingLinePlaneBase(bpy.types.Operator):
             item.kind: item for item in [calc_target_one, calc_target_two]
         }
 
-        if not ('LINE' in targets_by_kind and 'PLANE' in targets_by_kind):
+        if 'LINE' not in targets_by_kind or 'PLANE' not in targets_by_kind:
             self.report(
                 {'ERROR'},
                 ('Wrong operand: "Intersect Line/Plane" can'
@@ -980,14 +977,12 @@ class MAPLUS_OT_ComposePointIntersectingLinePlaneBase(bpy.types.Operator):
         plane_line_ba = plane_global_data[0] - plane_global_data[1]
         plane_line_bc = plane_global_data[2] - plane_global_data[1]
         plane_normal = plane_line_ba.cross(plane_line_bc)
-        intersection = mathutils.geometry.intersect_line_plane(
+        if intersection := mathutils.geometry.intersect_line_plane(
             line_global_data[0],
             line_global_data[1],
             plane_global_data[1],
-            plane_normal
-        )
-
-        if intersection:
+            plane_normal,
+        ):
             result_item.kind = 'POINT'
             result_item.point = intersection
             if addon_data.calc_result_to_clipboard:
@@ -1032,17 +1027,18 @@ class MAPLUS_OT_QuickComposePointIntersectingLinePlane(MAPLUS_OT_ComposePointInt
     def poll(cls, context):
         addon_data = bpy.context.scene.maplus_data
 
-        slot_kinds = set(
-            [item.kind for item in [
-                    addon_data.internal_storage_slot_1,
-                    addon_data.internal_storage_slot_2
-                ]
+        slot_kinds = {
+            item.kind
+            for item in [
+                addon_data.internal_storage_slot_1,
+                addon_data.internal_storage_slot_2,
             ]
+        }
+        return (
+            not addon_data.quick_calc_check_types
+            or 'LINE' in slot_kinds
+            and 'PLANE' in slot_kinds
         )
-        if (addon_data.quick_calc_check_types and
-                ('LINE' not in slot_kinds or 'PLANE' not in slot_kinds)):
-            return False
-        return True
 
 
 class MAPLUS_PT_CalculateAndComposeGUI(bpy.types.Panel):

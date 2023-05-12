@@ -625,14 +625,14 @@ class MAPLUS_OT_CopyToOtherBase(bpy.types.Operator):
 
     def execute(self, context):
         addon_data = bpy.context.scene.maplus_data
-        prims = addon_data.prim_list
-
         # Safely set active advanced tools item values...both the item and the
         # kind are needed to set mapping values, so dummy values are used if
         # the prims collections is empty (avoids access exceptions)
         advanced_tools_active_item = None
         active_kind = 'POINT'
         if 'ADVTOOLSACTIVE' in self.source_dest_pair:
+            prims = addon_data.prim_list
+
             if len(prims) < 1:
                 self.report(
                     {'ERROR'},
